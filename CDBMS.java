@@ -1,6 +1,6 @@
 // Customised Database Management System
 
-class Program418
+class CDBMS
 {
     public static void main(String Arg[])
     {
