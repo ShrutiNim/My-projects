@@ -1,12 +1,12 @@
 import java.util.*;
 import java.io.*;
 
-class Program327
+class Packer
 {
     public static void main(String arg[]) throws Exception
     {
         System.out.println("------------------------------------------------");
-        System.out.println("---------- Atharva's File Packer Unpacker ----------");
+        System.out.println("---------- Shruti's File Packer Unpacker ----------");
         System.out.println("------------------------------------------------");
 
         Scanner sobj = new Scanner(System.in);
@@ -80,7 +80,7 @@ class Program327
             System.out.println("Total file packed succesfully : "+Arr.length);
 
             System.out.println("------------------------------------------------");
-            System.out.println("Thank you for using Atharva's File Packer Unpacker");
+            System.out.println("Thank you for using Shruti's File Packer Unpacker");
             System.out.println("------------------------------------------------");
         }
         else 
