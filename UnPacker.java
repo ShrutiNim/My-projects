@@ -6,7 +6,7 @@ class UnPacker
     public static void main(String arg[]) throws Exception
     {
         System.out.println("------------------------------------------------");
-        System.out.println("---------- Atharva's File Packer Unpacker ----------");
+        System.out.println("---------- Shruti's File Packer Unpacker ----------");
         System.out.println("------------------------------------------------");
 
         byte Header[] = new byte[100];
@@ -50,7 +50,7 @@ class UnPacker
             System.out.println("Total file unpacked succesfully : "+iCnt);
 
             System.out.println("------------------------------------------------");
-            System.out.println("Thank you for using Atharva's File Packer Unpacker");
+            System.out.println("Thank you for using Shruti's File Packer Unpacker");
             System.out.println("------------------------------------------------");
     }
 }
