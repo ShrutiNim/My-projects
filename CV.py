@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
 
-# print("Himanshu Singh")
-# print("open cv version " + cv2.__version__)  # Corrected version print
-
 # web camera or video capture
 cap = cv2.VideoCapture("C:/Users/hp/Downloads/CV_video.mp4")
 
