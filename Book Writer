@@ -1,0 +1,112 @@
+import tensorflow as tf
+import numpy as np
+import os
+
+# Download Shakespeare text
+file = tf.keras.utils.get_file('shakespeare.txt', 'https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt')
+text = open(file, 'rb').read().decode(encoding='utf-8')
+
+# Prepare vocabulary
+vocab = sorted(set(text))
+c2i = {a: i for i, a in enumerate(vocab)}
+i2c = np.array(vocab)
+
+# Convert text to sequence of integers
+text_as_seq_of_ints = np.array([c2i[a] for a in text])
+
+# Sequence length and dataset creation
+seq_length = 120
+examples_per_epoch = len(text) // (seq_length + 1)
+char_dataset = tf.data.Dataset.from_tensor_slices(text_as_seq_of_ints)
+
+# Create batches
+seq = char_dataset.batch(seq_length + 1, drop_remainder=True)
+
+# Prepare input-target pairs
+def f_make_input_target_pairs(s):
+    input_text = s[:-1]
+    target_text = s[1:]
+    return input_text, target_text
+
+dataset = seq.map(f_make_input_target_pairs)
+
+# Set batch size and shuffle the dataset
+BS = 50
+dataset = dataset.shuffle(1000).batch(BS, drop_remainder=True)
+
+# Model parameters
+VS = len(vocab)
+ED = 100
+NU = 1024
+
+# Define the model
+def f_make_model(VS, ED, NU, BS=None, stateful=False):
+    if stateful:
+        model = tf.keras.Sequential([
+            tf.keras.layers.Embedding(input_dim=VS, output_dim=ED, batch_input_shape=(BS, None)),
+            tf.keras.layers.GRU(NU, return_sequences=True, stateful=stateful, recurrent_initializer='glorot_uniform'),
+            tf.keras.layers.Dense(VS)
+        ])
+    else:
+        model = tf.keras.Sequential([
+            tf.keras.layers.Embedding(input_dim=VS, output_dim=ED),
+            tf.keras.layers.GRU(NU, return_sequences=True, recurrent_initializer='glorot_uniform'),
+            tf.keras.layers.Dense(VS)
+        ])
+    return model
+
+# Create the training model
+model = f_make_model(VS, ED, NU, BS, stateful=False)
+
+# Define the loss function
+def f_loss(y, y_hat):
+    return tf.keras.losses.sparse_categorical_crossentropy(y, y_hat, from_logits=True)
+
+# Compile the model
+model.compile(optimizer='adam', loss=f_loss)
+
+# Create checkpoints directory if it doesn't exist
+checkpoints_dir = './tr_checkpoints'
+if not os.path.exists(checkpoints_dir):
+    os.makedirs(checkpoints_dir)
+
+# Define the checkpoint callback
+checkpoint_prefix = os.path.join(checkpoints_dir, "chpt_{epoch}")
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_prefix + ".weights.h5",
+    save_weights_only=True
+)
+
+# Train the model
+history = model.fit(dataset, epochs=2, callbacks=[checkpoint_callback])
+
+# Create a new model for inference with batch size 1
+model = f_make_model(VS, ED, NU, BS=1, stateful=True)
+
+# Load the latest checkpoint if exists
+checkpoint_path = tf.train.latest_checkpoint(checkpoints_dir)
+if checkpoint_path:
+    model.load_weights(checkpoint_path)
+else:
+    print("No checkpoint found.")
+
+# Build the model for inference
+model.build(tf.TensorShape([1, None]))
+
+# Function to generate text
+def f_write_now(model, ss):
+    N = 2000
+    ie = [c2i[a] for a in ss]
+    ie = tf.expand_dims(ie, 0)
+    g_txt = []
+    model.reset_states()  # Reset states before generation
+    for i in range(N):
+        p = model(ie)
+        p = tf.squeeze(p, 0)
+        p_id = tf.random.categorical(p, num_samples=1)[-1, 0].numpy()
+        ie = tf.expand_dims([p_id], 0)
+        g_txt.append(i2c[p_id])
+    return ss + ''.join(g_txt)
+
+# Generate text with the model
+print(f_write_now(model, ss=u"ROMEO: "))
